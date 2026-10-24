@@ -8,6 +8,7 @@ import FilenameSeoCheck from "./FilenameSeoCheck";
 import ImageMetrics from "./ImageMetrics";
 import ImagePreview from "./ImagePreview";
 import ImageUploader from "./ImageUploader";
+import InstagramCropPreview from "./InstagramCropPreview";
 import MetadataPanel from "./MetadataPanel";
 import OpenGraphPreview from "./OpenGraphPreview";
 import PlatformPresetSelector from "./PlatformPresetSelector";
@@ -168,6 +169,9 @@ export default function SmartPublishCheck({
         <div className="mt-6 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
           <div className="grid gap-4">
             <ImagePreview analysis={analysis} objectUrl={objectUrl} onClear={clearImage} />
+            {(preset === "instagram-post" || preset === "instagram-story") && analysis.format !== "svg" ? (
+              <InstagramCropPreview imageUrl={objectUrl} />
+            ) : null}
             <ImageMetrics analysis={analysis} />
           </div>
           <div className="grid gap-4">
