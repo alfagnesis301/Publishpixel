@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "./LanguageProvider";
 
 type Placement = "feed" | "grid" | "story";
 
@@ -13,14 +14,16 @@ const placements: { id: Placement; label: string; ratio: string; note: string }[
 export default function InstagramCropPreview({ imageUrl }: { imageUrl: string }) {
   const [placement, setPlacement] = useState<Placement>("grid");
   const selected = placements.find((item) => item.id === placement)!;
+  const { language } = useLanguage();
+  const es = language === "es";
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900" aria-label="Instagram crop preview">
-      <h3 className="text-lg font-bold text-slate-950 dark:text-white">Instagram crop preview</h3>
+    <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900" aria-label={es ? "Vista previa de recortes de Instagram" : "Instagram crop preview"}>
+      <h3 className="text-lg font-bold text-slate-950 dark:text-white">{es ? "Vista previa de recortes de Instagram" : "Instagram crop preview"}</h3>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-        Compare how a centred crop may look before exporting. This preview does not edit your original image.
+        {es ? "Compara el recorte centrado antes de exportar. La vista previa no modifica tu imagen original." : "Compare how a centred crop may look before exporting. This preview does not edit your original image."}
       </p>
-      <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Preview placement">
+      <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label={es ? "Formato de vista previa" : "Preview placement"}>
         {placements.map((item) => (
           <button
             key={item.id}
@@ -33,7 +36,7 @@ export default function InstagramCropPreview({ imageUrl }: { imageUrl: string })
                 : "border-slate-300 text-slate-700 hover:border-blue-500 dark:border-slate-700 dark:text-slate-200"
             }`}
           >
-            {item.label}
+            {es ? ({ feed: "Publicación 4:5", grid: "Perfil 3:4", story: "Historia 9:16" } as const)[item.id] : item.label}
           </button>
         ))}
       </div>
@@ -50,7 +53,7 @@ export default function InstagramCropPreview({ imageUrl }: { imageUrl: string })
           ) : null}
         </div>
       </div>
-      <p className="mt-3 text-xs leading-5 text-slate-600 dark:text-slate-400" role="status">{selected.note} Actual Instagram crops may vary.</p>
+      <p className="mt-3 text-xs leading-5 text-slate-600 dark:text-slate-400" role="status">{es ? "El recorte real de Instagram puede variar." : `${selected.note} Actual Instagram crops may vary.`}</p>
     </section>
   );
 }
