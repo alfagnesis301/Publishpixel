@@ -5,6 +5,7 @@ import {
   type PublishResult
 } from "./publishRules";
 import { estimateOutputSize, ratioToString, safeFileName } from "./imageUtils";
+import { readExifInfo, type ExifInfo } from "./exifReader";
 
 export type ImageDimensions = {
   width: number;
@@ -27,6 +28,7 @@ export type ImageAnalysisResult = {
   megapixels: number;
   hasTransparency: boolean | null;
   hasExifMetadata: boolean | null;
+  exifInfo: ExifInfo | null;
   estimatedOptimizedSize: number;
   compressionOpportunity: number;
   recommendedFormat: ImageFormat;
@@ -137,7 +139,8 @@ export async function analyzeImage(file: File, preset?: PresetId): Promise<Image
   const format = getImageFormat(file);
   const dimensions = await getImageDimensions(file);
   const hasTransparency = await detectTransparency(file, format);
-  const hasExifMetadata = await detectExifMetadata(file, format);
+  const exifInfo = format === "jpg" ? await readExifInfo(file) : null;
+  const hasExifMetadata = exifInfo?.status === "detected" ? true : exifInfo?.status === "absent" ? false : null;
   const compressionOpportunity = estimateCompressionPotential(file, dimensions, format);
   const recommendedFormat = recommendFormat(format, hasTransparency, preset);
   const aspectRatio = getAspectRatio(dimensions.width, dimensions.height);
@@ -172,6 +175,7 @@ export async function analyzeImage(file: File, preset?: PresetId): Promise<Image
     megapixels: calculateMegapixels(dimensions.width, dimensions.height),
     hasTransparency,
     hasExifMetadata,
+    exifInfo,
     estimatedOptimizedSize,
     compressionOpportunity,
     recommendedFormat,
@@ -188,28 +192,6 @@ export async function analyzeImage(file: File, preset?: PresetId): Promise<Image
     blurryRisk: getBlurryRisk(dimensions.width, dimensions.height, preset),
     notes
   };
-}
-
-async function detectExifMetadata(file: File, format: ImageFormat): Promise<boolean | null> {
-  if (format !== "jpg") return null;
-
-  try {
-    const buffer = await file.slice(0, Math.min(file.size, 256 * 1024)).arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    for (let index = 0; index < bytes.length - 10; index += 1) {
-      const isExif =
-        bytes[index] === 0x45 &&
-        bytes[index + 1] === 0x78 &&
-        bytes[index + 2] === 0x69 &&
-        bytes[index + 3] === 0x66 &&
-        bytes[index + 4] === 0x00 &&
-        bytes[index + 5] === 0x00;
-      if (isExif) return true;
-    }
-    return false;
-  } catch {
-    return null;
-  }
 }
 
 async function detectTransparency(file: File, format: ImageFormat): Promise<boolean | null> {
